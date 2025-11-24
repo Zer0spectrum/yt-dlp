@@ -1,8 +1,10 @@
+import re
+
 from .common import InfoExtractor
 
 
 class SkylineWebcamsIE(InfoExtractor):
-    _WORKING = False
+    _WORKING = True
     _VALID_URL = r'https?://(?:www\.)?skylinewebcams\.com/[^/]+/webcam/(?:[^/]+/)+(?P<id>[^/]+)\.html'
     _TEST = {
         'url': 'https://www.skylinewebcams.com/it/webcam/italia/lazio/roma/scalinata-piazza-di-spagna-barcaccia.html',
@@ -22,13 +24,16 @@ class SkylineWebcamsIE(InfoExtractor):
         video_id = self._match_id(url)
 
         webpage = self._download_webpage(url, video_id)
-
-        stream_url = self._search_regex(
-            r'(?:url|source)\s*:\s*(["\'])(?P<url>(?:https?:)?//.+?\.m3u8.*?)\1', webpage,
-            'stream url', group='url')
+        video_url = self._search_regex(
+            r'var\s+player\s*=\s*new\s+Clappr\.Player\s*\([^)]*?source\s*:\s*["\']([^"\']+)["\']',
+            webpage,
+            'video url',
+            flags=re.DOTALL,
+        )
 
         title = self._og_search_title(webpage)
         description = self._og_search_description(webpage)
+        stream_url = 'https://hd-auth.skylinewebcams.com/' + video_url
 
         return {
             'id': video_id,
